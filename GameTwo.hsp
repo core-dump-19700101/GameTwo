@@ -1,0 +1,239 @@
+; GameTwo - タイトル未定
+; Created by "URUZ13"
+; 3/30/12
+; _/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/_/
+
+#uselib "winmm"
+#cfunc cGetTime "timeGetTime"
+
+;======================================================================================
+;======================================================================================
+
+*start		; Start of program
+	cls
+	
+;======================================================================================
+;======================================================================================
+
+*initialization		; Initilize variables
+	screen 0, 1024, 768, 4
+	ground = 300
+	a_g = double(4000)
+	p_px = 100 : p_py = 368
+	v_px = double(10) : v_py = double(0)
+	d_p = 0
+	p_tx = 600 : p_ty = 368
+	v_tx = double(10) : v_ty = double(0)
+	t0 = cGetTime() : t3 = t0
+	c = 0 : st = 0
+	
+	pos 900, 50
+	button "Quit", *exit
+
+;======================================================================================
+;======================================================================================
+
+	
+*battle 	; Process battle scene
+;--------------------------------------------------------------------------------------
+; Clear screen
+;--------------------------------------------------------------------------------------
+	wait 1
+	redraw 0
+	
+	
+;--------------------------------------------------------------------------------------
+; Draw contents
+;--------------------------------------------------------------------------------------
+	color 128, 128, 128
+	boxf
+	color 32, 32, 32
+	boxf 0, 768 - ground, 1024, 768
+	
+	pos 380, 200
+	color 64, 64, 64
+	font "MSゴシック", 50, 1
+	mes "←→：左右移動"
+	mes "↑：ジャンプ"
+	mes "SPACE：攻撃"
+	
+	pos 50, 50
+	color 0, 0, 0
+	font "MSゴシック", 12
+	mes "Time: " + t0 + ", dt: " + t + ", 経過時間: " + elapsed_time
+	mes "Position_x: " + p_px
+	mes "Position_y: " + p_py
+	mes "Velocity_y: " + v_py
+	mes "Velocity_x: " + v_px
+	mes "twait: " + twait
+	
+	pos p_tx, p_ty
+	font "MSゴシック", 72, 1
+	color 0, 0, 0
+	mes "君"
+	
+	pos p_px, p_py
+	color 255, 255, 255
+	mes "俺"
+	
+	if d_p = 0 {
+		if c = 0 {
+			;await 10
+			pos p_px+60, p_py-25
+			color 255, 0, 0
+			mes "／"
+		}
+		else : if c <= 5 {
+			pos p_px+60, p_py-25
+			color 128, 64, 64
+			mes "／"
+			pos p_px+65, p_py-8
+			color 255, 0, 0
+			mes "―"
+		}
+		else : if c <= 10 {
+			pos p_px+60, p_py-25
+			color 128, 128, 128
+			mes "／"
+			pos p_px+65, p_py-8
+			color 128, 64, 64
+			mes "―"
+			pos p_px+60, p_py+30
+			color 255, 0, 0
+			mes "＼"
+		}
+	}
+	else {
+		if c = 0 {
+			;await 10
+			pos p_px-60, p_py-25
+			color 255, 0, 0
+			mes "＼"
+		}
+		else : if c <= 5 {
+			pos p_px-60, p_py-25
+			color 128, 64, 64
+			mes "＼"
+			pos p_px-65, p_py-8
+			color 255, 0, 0
+			mes "―"
+		}
+		else : if c <= 10 {
+			pos p_px-60, p_py-25
+			color 128, 128, 128
+			mes "＼"
+			pos p_px-65, p_py-8
+			color 128, 64, 64
+			mes "―"
+			pos p_px-60, p_py+30
+			color 255, 0, 0
+			mes "／"
+		}
+	}
+	
+	redraw 1
+
+	
+;--------------------------------------------------------------------------------------
+; Update variables
+;--------------------------------------------------------------------------------------
+	elapsed_time = cGetTime() - t3
+	
+	; 攻撃シークエンス
+	if c=15 { c=0 }
+	else : if c>=1 : c=c+1 
+	if st=1 & c=0 { c=c+1 }
+	st = 0
+	
+	; Keyboard input
+	stick key, 13
+	if key&1 {
+		if p_py = 768-ground-65 : d_p = 1
+		if twait <= 20 {
+			p_px -= v_px * 2
+		else {
+			p_px = p_px - v_px
+		}
+	}
+	else {  }
+	if key&4 {
+		if p_py = 768-ground-65 : d_p = 0
+		p_px = p_px + v_px
+	}
+	if key&2 {
+		if p_py >= 768-ground-65 {
+			v_py = double(-1400)
+		}
+	}
+	if key&16 {
+		st = 1
+		if p_py-p_ty <= 20 & p_ty-p_py<=140 {
+			if d_p = 0 & p_tx-p_px <= 140 & p_tx-p_px >= 20 {	
+				color 255, 0, 0
+				pos p_tx, p_ty-30
+				mes "Hit"
+				v_ty = double(-300)
+				p_tx = p_tx + v_tx
+			}
+			if d_p = 1 & p_px-p_tx <= 140 & p_px-p_tx >= 20 {	
+				color 255, 0, 0
+				pos p_tx, p_ty-30
+				mes "Hit"
+				v_ty = double(-300)
+				p_tx = p_tx - v_tx
+			}
+		}
+	}
+	
+	; Calculate position
+	t = double(cGetTime() - t0)
+	if p_py > 768-ground-65 {
+		p_py = 768-ground-65
+		v_py = double(0)
+	}
+	else : if p_py < 768-ground-65 {
+		v_py = double(v_py + a_g * (t/1000))
+	}
+	if p_ty > 768-ground-65 {
+		p_ty = 768-ground-65
+		v_ty = double(0)
+	}
+	else : if p_ty < 768-ground-65 {
+		v_ty = double(v_ty + a_g * (t/1000))
+	}
+	p_py = p_py + v_py * (t/1000) 
+	p_ty = p_ty + v_ty * (t/1000) 
+	t0 = cGetTime()
+	
+	; Teki movement
+	if p_ty >= 768-ground-65 {
+		if p_tx > 600 : p_tx = p_tx - v_tx
+		if p_tx < 300 : p_tx = p_tx + v_tx
+	}
+	
+	; Edge detection
+	if p_px > 1024 - 65 {
+		p_px = 1024 - 65
+	}
+	if p_px < -7 {
+		p_px = -7
+	}
+	if p_tx > 1024 - 65 {
+		p_tx = 1024 - 65
+	}
+	if p_tx < -7 {
+		p_tx = -7
+	}
+
+;--------------------------------------------------------------------------------------
+; Loop
+;--------------------------------------------------------------------------------------
+	goto *battle
+
+
+;======================================================================================
+;======================================================================================
+
+*exit		; Exit program
+	end
+
